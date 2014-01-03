@@ -1,26 +1,18 @@
-#!/bin/bash
+#!/usr/bin/env python
+import sys
+import os
+from flake8.hooks import git_hook
 
-function cleanup {
-    if [[ $? > 0 ]] ; then
-        echo "You might want to run 'git stash pop' in order to get your files back"
-    fi
-}
+COMPLEXITY = os.getenv('FLAKE8_COMPLEXITY', 10)
+STRICT = os.getenv('FLAKE8_STRICT', True)
+IGNORE = os.getenv('FLAKE8_IGNORE')
+LAZY = os.getenv('FLAKE8_LAZY', False)
 
-trap "cleanup" EXIT
 
-FILENAME=$0
-if [ -h $FILENAME ] ; then
-    FILENAME=`readlink -e $FILENAME`
-fi
-DIR=`dirname $FILENAME`
-
-# make sure only changes of the current commit are affected
-git stash -q -u --keep-index
-
-flake8 .
-
-exit_code=$?
-
-git stash pop -q
-
-exit $exit_code
+if __name__ == '__main__':
+    sys.exit(git_hook(
+        complexity=COMPLEXITY,
+        strict=STRICT,
+        ignore=IGNORE,
+        lazy=LAZY,
+        ))
