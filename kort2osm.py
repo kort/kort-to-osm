@@ -1,8 +1,20 @@
 from ConfigParser import ConfigParser
-from OsmApi import OsmApi
+from osmapi import OsmApi
 from pprint import pprint
 import requests
 import errortypes
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-d",
+    "--dry",
+    help="Do not actually make changed, only a dry run",
+    action="store_true"
+)
+args = parser.parse_args()
+if args.dry:
+    print "### Dry run: ###"
 
 config = ConfigParser()
 config.read('setup.cfg')
@@ -15,6 +27,8 @@ osm_app = config.get('Osm', 'appid')
 
 # Kort config
 kort_api = config.get('Kort', 'completed_fix_api')
+db_api = config.get('Kort', 'db_api')
+db_api_key = config.get('Kort', 'db_api_key')
 
 osm = OsmApi(
     api=osm_api,
@@ -22,18 +36,91 @@ osm = OsmApi(
     username=osm_user,
     password=osm_pass
 )
-pprint(osm.NodeGet(123))
-# osm.ChangesetCreate({u"comment": u"My first test"})
-# pprint(osm.NodeCreate({u"lon": 1, u"lat": 1, u"tag": {}}))
-# osm.ChangesetClose()
+
+
+def osm_type_get_factory(type, id):
+    if type == 'node':
+        return osm.NodeGet(id)
+    if type == 'way':
+        return osm.WayGet(id)
+    if type == 'relation':
+        return osm.RelationGet(id)
+
+
+def osm_type_update_factory(type, new_values):
+    if type == 'node':
+        return osm.NodeUpdate(new_values)
+    if type == 'way':
+        return osm.WayUpdate(new_values)
+    if type == 'relation':
+        return osm.RelationUpdate(new_values)
+
+
+def mark_fix(fix_id):
+    table_name = 'kort.fix'
+    column = 'in_osm'
+    where_clause = 'fix_id = %s' % fix_id
+    params = {'where': where_clause, 'key': db_api_key}
+    payload = {column: 't'}
+
+    # make request
+    url = db_api + '/' + table_name + '/' + column
+    r = requests.put(
+        url,
+        params=params,
+        data=payload
+    )
+    if r.status_code == requests.codes.ok:
+        print "Successfully marked fix as 'in_osm'"
+    else:
+        print "Error while marking fix as 'in_osm':"
+        pprint(r.text)
 
 
 # read a solution (from database or API)
 r = requests.get(kort_api)
-one = r.json()[-1]
-pprint(one)
+for kort_fix in r.json()[0:1]:
+    try:
+        print "===="
+        pprint(kort_fix)
 
-pprint(errortypes.Error(one['error_type']))
+        osm_type = osm_type_get_factory(
+            kort_fix['osm_type'],
+            kort_fix['osm_id']
+        )
 
-# determine OSM solution (modify node/way etc.)
-# write data to OSM
+        print "----"
+        pprint(osm_type['tag'])
+
+        error_type = errortypes.Error(kort_fix['error_type'], osm_type)
+        fixed_osm_type, description = error_type.apply_fix(kort_fix)
+
+        print "----"
+        pprint(fixed_osm_type['tag'])
+        print "===="
+    except (errortypes.ErrorTypeError, ValueError), e:
+        print e
+        fixed_osm_type = None
+    if not args.dry:
+        if fixed_osm_type is not None:
+            osm.ChangesetCreate({
+                u"comment": (
+                    u"Change from kort, user: %s (id: %s), "
+                    u"fix id: %s, error: %s, description: %s"
+                    % (
+                        kort_fix['username'],
+                        kort_fix['user_id'],
+                        kort_fix['fix_id'],
+                        kort_fix['error_type'],
+                        description
+                    )
+                )
+            })
+            pprint(
+                osm_type_update_factory(
+                    kort_fix['osm_type'],
+                    fixed_osm_type
+                )
+            )
+            osm.ChangesetClose()
+        mark_fix(kort_fix['fix_id'])
