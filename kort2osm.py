@@ -9,8 +9,14 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     "-d",
     "--dry",
-    help="Do not actually make changed, only a dry run",
+    help="do not actually make changed, only a dry run",
     action="store_true"
+)
+parser.add_argument(
+    "-c",
+    "--count",
+    help="count of fixes to run through from kort to OSM",
+    type=int
 )
 args = parser.parse_args()
 if args.dry:
@@ -79,7 +85,8 @@ def mark_fix(fix_id):
 
 # read a solution (from database or API)
 r = requests.get(kort_api)
-for kort_fix in r.json()[0:1]:
+limit = args.count if args.count is not None else 1
+for kort_fix in r.json()[0:limit]:
     try:
         print "===="
         pprint(kort_fix)
