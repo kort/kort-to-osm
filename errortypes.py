@@ -60,11 +60,15 @@ class LanguageErrorType(ErrorType):
         try:
             orig_tag = kort_fix['osm_tag'].replace(':XX', '')
             new_tag = '%s:%s' % (orig_tag, kort_fix['answer'])
+            orig_value = self.osm_type['tag'][orig_tag]
 
-            if self.osm_type['tag'][new_tag] == self.osm_type['tag'][orig_tag]:
+            if (new_tag in self.osm_type['tag'] and
+                    self.osm_type['tag'][new_tag] == orig_value):
                 raise ErrorTypeError("The fix has already been applied")
 
-            self.osm_type['tag'][new_tag] = self.osm_type['tag'][orig_tag]
+            self.osm_type['tag'].update({
+                new_tag: orig_value
+            })
         except KeyError, e:
             raise ErrorTypeError("Tag '%s' not found on osm_type", e)
         return (
