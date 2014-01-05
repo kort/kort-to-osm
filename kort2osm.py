@@ -133,12 +133,13 @@ for kort_fix in r.json()[0:limit]:
             osm.ChangesetCreate({
                 u"comment": (
                     u"Change from kort, user: %s (id: %s), "
-                    u"fix id: %s, error: %s, description: %s"
+                    u"fix id: %s, error: %s (source: %s), description: %s"
                     % (
                         kort_fix['username'],
                         kort_fix['user_id'],
                         kort_fix['fix_id'],
                         kort_fix['error_type'],
+                        kort_fix['source'],
                         description
                     )
                 )
