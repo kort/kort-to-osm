@@ -1,9 +1,10 @@
 from ConfigParser import ConfigParser
 from osmapi import OsmApi
-from pprint import pprint
+import pprint
 import requests
 import errortypes
 import argparse
+import logging
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -13,14 +14,35 @@ parser.add_argument(
     action="store_true"
 )
 parser.add_argument(
+    "-q",
+    "--quiet",
+    help="run quietly without any output",
+    action="store_true"
+)
+parser.add_argument(
+    "-v",
+    "--verbose",
+    help="show more verbose output",
+    action="store_true"
+)
+parser.add_argument(
     "-c",
     "--count",
     help="count of fixes to run through from kort to OSM",
     type=int
 )
 args = parser.parse_args()
+
+if args.quiet:
+    logging.basicConfig(level=logging.WARNING)
+elif args.verbose or args.dry:
+    logging.basicConfig(level=logging.DEBUG)
+else:
+    logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
+
 if args.dry:
-    print "### Dry run: ###"
+    log.info("### Dry run: ###")
 
 config = ConfigParser()
 config.read('setup.cfg')
@@ -76,11 +98,10 @@ def mark_fix(fix_id):
         params=params,
         data=payload
     )
-    if r.status_code == requests.codes.ok:
-        print "Successfully marked fix as 'in_osm'"
+    if r.status_code == requests.codes.ok and not args.quiet:
+        log.info("Successfully marked fix as 'in_osm'")
     else:
-        print "Error while marking fix as 'in_osm':"
-        pprint(r.text)
+        raise MarkFixError("Error while marking fix as 'in_osm': %s" % r.text)
 
 
 # read a solution (from database or API)
@@ -88,25 +109,24 @@ r = requests.get(kort_api)
 limit = args.count if args.count is not None else 1
 for kort_fix in r.json()[0:limit]:
     try:
-        print "===="
-        pprint(kort_fix)
+        log.debug("---- Fix from Kort: ----")
+        log.debug("%s" % pprint.pformat(kort_fix))
 
         osm_type = osm_type_get_factory(
             kort_fix['osm_type'],
             kort_fix['osm_id']
         )
 
-        print "----"
-        pprint(osm_type['tag'])
+        log.debug("---- OSM type before fix ----")
+        log.debug("%s" % pprint.pformat(osm_type['tag']))
 
         error_type = errortypes.Error(kort_fix['error_type'], osm_type)
         fixed_osm_type, description = error_type.apply_fix(kort_fix)
 
-        print "----"
-        pprint(fixed_osm_type['tag'])
-        print "===="
+        log.debug("---- OSM type after fix ----")
+        log.debug("%s" % pprint.pformat(fixed_osm_type['tag']))
     except (errortypes.ErrorTypeError, ValueError), e:
-        print e
+        log.info("The fix could not be applied: %s" % e.value)
         fixed_osm_type = None
     if not args.dry:
         if fixed_osm_type is not None:
@@ -123,11 +143,15 @@ for kort_fix in r.json()[0:limit]:
                     )
                 )
             })
-            pprint(
-                osm_type_update_factory(
-                    kort_fix['osm_type'],
-                    fixed_osm_type
-                )
+            changeset = osm_type_update_factory(
+                kort_fix['osm_type'],
+                fixed_osm_type
             )
+            log.info("%s" % pprint.pformat(changeset))
+
             osm.ChangesetClose()
         mark_fix(kort_fix['fix_id'])
+
+
+class MarkFixError(Exception):
+    pass
