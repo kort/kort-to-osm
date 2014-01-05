@@ -6,7 +6,9 @@ Transfer changes from Kort to OpenStreetMap
 ## Installation
 
 * Copy setup.dist.cfg to setup.cfg and adapt the values
-* Run `install.sh` to install all needed dependencies
+* Run the following to install all needed dependencies
+
+    pip install -r requirements.txt
 
 ### For development
 * install the `pre-commit.sh` script as a pre-commit hook in your local repositories:
