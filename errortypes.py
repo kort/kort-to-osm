@@ -51,6 +51,18 @@ class ReligionErrorType(MissingTagErrorType):
         return error == 'religion'
 
 
+class MotorwayRefErrorType(MissingTagErrorType):
+    @classmethod
+    def handles_error(cls, error):
+        return error == 'motorway_ref'
+
+
+class MissingCuisineErrorType(MissingTagErrorType):
+    @classmethod
+    def handles_error(cls, error):
+        return error == 'missing_cuisine'
+
+
 class LanguageErrorType(ErrorType):
     @classmethod
     def handles_error(cls, error):
