@@ -76,7 +76,9 @@ for kort_fix in osm.read_kort_fix(limit):
         if fixed_osm_entity is not None:
             comment = (
                 u"Change from kort, user: %s (id: %s), "
-                u"fix id: %s, error: %s (source: %s), description: %s"
+                u"fix id: %s, error: %s (source: %s), description: %s "
+                u"information about changes made by this user: "
+                u"http://www.openstreetmap.org/user/kort-to-osm"
                 % (
                     kort_fix['username'],
                     kort_fix['user_id'],
