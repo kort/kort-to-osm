@@ -58,7 +58,7 @@ class OsmFix(object):
         self.osm.ChangesetCreate({
             "comment": comment
         })
-        changeset = self.update_for_entity(
+        changeset = self.update_for_type(
             type,
             entity
         )
