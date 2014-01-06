@@ -56,7 +56,9 @@ class OsmFix(object):
         Submits an OSM entity (node, way, relation) to OSM
         """
         self.osm.ChangesetCreate({
-            "comment": comment
+            "comment": comment,
+            "mechanical": "yes",
+            "bot": "yes"
         })
         changeset = self.update_for_type(
             type,
