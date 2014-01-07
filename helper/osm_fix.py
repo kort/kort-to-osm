@@ -58,7 +58,6 @@ class OsmFix(object):
         self.osm.ChangesetCreate({
             "comment": comment[:255],
             "mechanical": "yes",
-            "bot": "yes"
         })
         changeset = self.update_for_type(
             type,
