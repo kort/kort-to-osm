@@ -86,7 +86,10 @@ try:
             log.debug("---- OSM type after fix ----")
             log.debug("%s" % pprint.pformat(fixed_osm_entity['tag']))
         except (errortypes.ErrorTypeError, ValueError), e:
-            log.info("The fix could not be applied: %s" % str(e))
+            log.warning(
+                "The fix could not be applied: %s, fix: %s"
+                % (str(e), kort_fix)
+            )
             fixed_osm_entity = None
         if not args.dry:
             if fixed_osm_entity is not None:
