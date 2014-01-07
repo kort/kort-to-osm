@@ -57,7 +57,7 @@ else:
 log = logging.getLogger(__name__)
 
 if args.dry:
-    log.info("### Dry run: ###")
+    print "### Dry run: ###"
 
 config = ConfigParser()
 config.read('setup.cfg')
