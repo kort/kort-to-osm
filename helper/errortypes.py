@@ -82,7 +82,7 @@ class LanguageErrorType(ErrorType):
                 new_tag: orig_value
             })
         except KeyError, e:
-            raise ErrorTypeError("Tag '%s' not found on osm_type", e)
+            raise ErrorTypeError("Tag %s not found on osm_type" % e)
         return (
             self.osm_type,
             "Set tag '%s' to '%s'" % (new_tag, self.osm_type['tag'][orig_tag])
