@@ -1,6 +1,6 @@
 from nose.tools import *  # noqa
 from ConfigParser import ConfigParser
-from helper import osm_fix, kort_db_api
+from helper import osm_fix
 import osmapi
 import mock
 
