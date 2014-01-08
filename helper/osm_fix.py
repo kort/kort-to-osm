@@ -65,6 +65,8 @@ class OsmFix(object):
                         kort_fix['osm_type'],
                         kort_fix['osm_id']
                     )
+                    if not osm_entity:
+                        raise OsmEntityNotFoundError("OSM entity not found")
 
                     log.debug("---- OSM type before fix ----")
                     log.debug("%s" % pprint.pformat(osm_entity['tag']))
@@ -78,7 +80,9 @@ class OsmFix(object):
 
                     log.debug("---- OSM type after fix ----")
                     log.debug("%s" % pprint.pformat(fixed_osm_entity['tag']))
-                except (errortypes.ErrorTypeError, ValueError), e:
+                except (errortypes.ErrorTypeError,
+                        OsmEntityNotFoundError,
+                        ValueError), e:
                     log.warning(
                         "The fix could not be applied: %s, fix: %s"
                         % (str(e), kort_fix)
@@ -131,3 +135,7 @@ class OsmFix(object):
         )
         log.info("%s" % pprint.pformat(changeset))
         self.osm.ChangesetClose()
+
+
+class OsmEntityNotFoundError(Exception):
+    pass
