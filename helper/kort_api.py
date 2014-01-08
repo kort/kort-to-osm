@@ -4,10 +4,11 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class KortDbApi(object):
+class KortApi(object):
     def __init__(self, config):
         self.db_api = config.get('Kort', 'db_api')
         self.db_api_key = config.get('Kort', 'db_api_key')
+        self.fix_api_url = config.get('Kort', 'completed_fix_api')
 
     def mark_fix(self, fix_id):
         table_name = 'kort.fix'
@@ -30,6 +31,16 @@ class KortDbApi(object):
                 "Error while marking fix as 'in_osm': %s"
                 % r.text
             )
+
+    def read_fix(self, limit):
+        """
+        Returns an array of dicts containing fixes from kort
+        """
+        try:
+            r = requests.get(self.fix_api_url)
+            return r.json()[0:limit]
+        except ValueError:
+            return []
 
 
 class MarkFixError(Exception):

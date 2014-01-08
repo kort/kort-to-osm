@@ -1,10 +1,9 @@
 from osmapi import OsmApi
-import requests
 import pprint
 import logging
 
 import errortypes
-import kort_db_api
+import kort_api
 
 log = logging.getLogger(__name__)
 
@@ -16,14 +15,13 @@ class OsmFix(object):
         osm_api = config.get('Osm', 'api')
         osm_app = config.get('Osm', 'appid')
 
-        self.kort_api_url = config.get('Kort', 'completed_fix_api')
         self.osm = OsmApi(
             api=osm_api,
             appid=osm_app,
             username=osm_user,
             password=osm_pass
         )
-        self.kort_db_api = kort_db_api.KortDbApi(config)
+        self.kort_api = kort_api.KortApi(config)
 
     def get_for_type(self, type, id):
         """
@@ -47,16 +45,9 @@ class OsmFix(object):
         if type == 'relation':
             return self.osm.RelationUpdate(new_values)
 
-    def read_kort_fix(self, limit):
-        """
-        Returns an array of dicts containing fixes from kort
-        """
-        r = requests.get(self.kort_api_url)
-        return r.json()[0:limit]
-
     def apply_kort_fix(self, limit=1, dry=False):
         try:
-            for kort_fix in self.read_kort_fix(limit):
+            for kort_fix in self.kort_api.read_fix(limit):
                 try:
                     log.debug("---- Fix from Kort: ----")
                     log.debug("%s" % pprint.pformat(kort_fix))
@@ -99,7 +90,7 @@ class OsmFix(object):
                             fixed_osm_entity,
                             comment
                         )
-                    self.kort_db_api.mark_fix(kort_fix['fix_id'])
+                    self.kort_api.mark_fix(kort_fix['fix_id'])
         except Exception, e:
             log.exception("Failed to apply fix of Kort to OpenStreetMap")
 
