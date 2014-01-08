@@ -1,6 +1,8 @@
 kort-to-osm
 ===========
 
+[![Build Status](https://travis-ci.org/kort/kort-to-osm.png?branch=develop)](https://travis-ci.org/kort/kort-to-osm)
+
 Transfer changes from Kort to OpenStreetMap.
 
 ## Installation
