@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     "-d",
     "--dry",
-    help="do not actually make changed, only a dry run",
+    help="do not actually make changes, only a dry run",
     action="store_true"
 )
 parser.add_argument(

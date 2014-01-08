@@ -27,7 +27,7 @@ usage: kort2osm.py [-h] [-d] [-q] [-v] [-c COUNT]
 
 optional arguments:
   -h, --help                show this help message and exit
-  -d, --dry                 do not actually make changed, only a dry run
+  -d, --dry                 do not actually make changes, only a dry run
   -q, --quiet               run quietly without any output
   -v, --verbose             show more verbose output
   -c COUNT, --count COUNT   count of fixes to run through from kort to OSM
