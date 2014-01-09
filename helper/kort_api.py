@@ -26,11 +26,12 @@ class KortApi(object):
         )
         if r.status_code == requests.codes.ok:
             log.info("Successfully marked fix as 'in_osm'")
-        else:
-            raise MarkFixError(
-                "Error while marking fix as 'in_osm': %s"
-                % r.text
-            )
+            return True
+
+        raise MarkFixError(
+            "Error while marking fix as 'in_osm': %s"
+            % r.text
+        )
 
     def read_fix(self, limit):
         """
@@ -38,10 +39,25 @@ class KortApi(object):
         """
         try:
             r = requests.get(self.fix_api_url)
-            return r.json()[0:limit]
-        except ValueError:
+            if r.status_code == requests.codes.ok:
+                log.info("Successfully retrieved fixes from kort'")
+                try:
+                    return r.json()[0:limit]
+                except ValueError, e:
+                    return []
+            else:
+                raise ReadFixError(
+                    "status: %s, content: %s"
+                    % (r.status_code, r.content)
+                )
+        except ReadFixError, e:
+            log.warning("Request to read kort fixes failed: %s" % e)
             return []
 
 
 class MarkFixError(Exception):
+    pass
+
+
+class ReadFixError(Exception):
     pass
