@@ -6,6 +6,13 @@ import os
 import logging.config
 import yaml
 
+__location__ = os.path.realpath(
+    os.path.join(
+        os.getcwd(),
+        os.path.dirname(__file__)
+    )
+)
+
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "-d",
@@ -34,7 +41,9 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-def setup_logging(path='logging.yml', default_level=logging.INFO):
+def setup_logging(
+        path=os.path.join(__location__, 'logging.yml'),
+        default_level=logging.INFO):
     """
     Setup logging configuration
     """
@@ -57,7 +66,7 @@ if args.dry:
     print "### Dry run: ###"
 
 config = ConfigParser()
-config.read('setup.cfg')
+config.read(os.path.join(__location__, 'setup.cfg'))
 limit = args.count if args.count is not None else 1
 
 # apply the fixes from kort to OSM
