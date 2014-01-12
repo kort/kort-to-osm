@@ -23,14 +23,20 @@ pip install -r requirements.txt
 
 ```bash
 $> python kort2osm.py --help
-usage: kort2osm.py [-h] [-d] [-q] [-v] [-c COUNT]
+kort-to-osm
 
-optional arguments:
-  -h, --help                show this help message and exit
-  -d, --dry                 do not actually make changes, only a dry run
-  -q, --quiet               run quietly without any output
-  -v, --verbose             show more verbose output
-  -c COUNT, --count COUNT   count of fixes to run through from kort to OSM
+Usage:
+  kort2osm.py [-d] [-q] [-v] [-c COUNT]
+  kort2osm.py -h | --help
+  kort2osm.py --version
+
+Options:
+  -h, --help               Show this help message and exit.
+  -d, --dry                Do not actually make changes, only a dry run
+  -q, --quiet              Run quietly, without any output.
+  -v, --verbose            Show more verbose output.
+  -c COUNT, --count=COUNT  Count of fixes to run through from kort to OSM.
+  --version                Show the version and exit.
 ```
 
 Per default, the script runs only a single change from Kort to OSM.
