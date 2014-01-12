@@ -3,3 +3,4 @@ setup.cfg
 logging.yml
 errors.log*
 debug.log*
+*.swp
