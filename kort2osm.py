@@ -1,10 +1,30 @@
-from ConfigParser import ConfigParser
-from helper import osm_fix
-import argparse
-import logging
+"""
+kort-to-osm
+
+Usage:
+  kort2osm.py [-d] [-q] [-v] [-c COUNT]
+  kort2osm.py -h | --help
+  kort2osm.py --version
+
+Options:
+  -h, --help               Show this help message and exit.
+  -d, --dry                Do not actually make changes, only a dry run
+  -q, --quiet              Run quietly, without any output.
+  -v, --verbose            Show more verbose output.
+  -c COUNT, --count=COUNT  Count of fixes to run through from kort to OSM.
+  --version                Show the version and exit.
+
+"""
 import os
+import logging
 import logging.config
+from ConfigParser import ConfigParser
+
+import docopt
 import yaml
+
+from helper import osm_fix
+
 
 __location__ = os.path.realpath(
     os.path.join(
@@ -12,33 +32,6 @@ __location__ = os.path.realpath(
         os.path.dirname(__file__)
     )
 )
-
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "-d",
-    "--dry",
-    help="do not actually make changes, only a dry run",
-    action="store_true"
-)
-parser.add_argument(
-    "-q",
-    "--quiet",
-    help="run quietly without any output",
-    action="store_true"
-)
-parser.add_argument(
-    "-v",
-    "--verbose",
-    help="show more verbose output",
-    action="store_true"
-)
-parser.add_argument(
-    "-c",
-    "--count",
-    help="count of fixes to run through from kort to OSM",
-    type=int
-)
-args = parser.parse_args()
 
 
 def setup_logging(
@@ -54,21 +47,30 @@ def setup_logging(
     else:
         logging.basicConfig(level=default_level)
 
-if args.quiet:
-    logging.basicConfig(level=logging.WARNING)
-elif args.verbose:
-    logging.basicConfig(level=logging.DEBUG)
-else:
-    setup_logging()
-log = logging.getLogger(__name__)
 
-if args.dry:
-    print "### Dry run: ###"
+if __name__ == '__main__':
+    arguments = docopt.docopt(__doc__, version='kort-to-osm 0.1')
 
-config = ConfigParser()
-config.read(os.path.join(__location__, 'setup.cfg'))
-limit = args.count if args.count is not None else 1
+    # Set up logging
+    if arguments['--quiet']:
+        logging.basicConfig(level=logging.WARNING)
+    elif arguments['--verbose']:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        setup_logging()
 
-# apply the fixes from kort to OSM
-osm = osm_fix.OsmFix(config)
-osm.apply_kort_fix(limit, args.dry)
+    # Handle a dry run
+    if arguments['--dry']:
+        print '### Dry run: ###'
+
+    # Parse the configuration
+    config = ConfigParser()
+    config.read(os.path.join(__location__, 'setup.cfg'))
+
+    # Apply the fixes from kort to OSM
+    try:
+        limit = int(arguments['--count'])
+    except TypeError:
+        limit = 1
+    osm = osm_fix.OsmFix(config)
+    osm.apply_kort_fix(limit, arguments['--dry'])
