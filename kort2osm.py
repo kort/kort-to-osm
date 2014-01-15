@@ -7,20 +7,22 @@ Usage:
   kort2osm.py --version
 
 Options:
-  -h, --help               Show this help message and exit.
-  -d, --dry                Do not actually make changes, only a dry run
-  -q, --quiet              Run quietly, without any output.
-  -v, --verbose            Show more verbose output.
-  -c COUNT, --count=COUNT  Count of fixes to run through from kort to OSM.
+  -h --help                Show this help message and exit.
+  -d --dry                 Do not actually make changes, only a dry run
+  -q --quiet               Run quietly, without any output.
+  -v --verbose             Show more verbose output.
+  -c COUNT, --count=COUNT  Count of fixes to process [default: 1]
   --version                Show the version and exit.
 
 """
 import os
+import sys
 import logging
 import logging.config
 from ConfigParser import ConfigParser
 
 import docopt
+from schema import Schema, Use, SchemaError
 import yaml
 
 from helper import osm_fix
@@ -49,18 +51,26 @@ def setup_logging(
 
 
 if __name__ == '__main__':
-    arguments = docopt.docopt(__doc__, version='kort-to-osm 0.1')
+    arguments = docopt.docopt(__doc__, version='kort-to-osm 0.2')
+    arg_schema = Schema({
+        '--count': Use(int, error='count must be an integer'),
+        object: object
+    })
+    try:
+        args = arg_schema.validate(arguments)
+    except SchemaError, e:
+        sys.exit(e)
 
     # Set up logging
-    if arguments['--quiet']:
+    if args['--quiet']:
         logging.basicConfig(level=logging.WARNING)
-    elif arguments['--verbose']:
+    elif args['--verbose']:
         logging.basicConfig(level=logging.DEBUG)
     else:
         setup_logging()
 
     # Handle a dry run
-    if arguments['--dry']:
+    if args['--dry']:
         print '### Dry run: ###'
 
     # Parse the configuration
@@ -68,9 +78,6 @@ if __name__ == '__main__':
     config.read(os.path.join(__location__, 'setup.cfg'))
 
     # Apply the fixes from kort to OSM
-    try:
-        limit = int(arguments['--count'])
-    except TypeError:
-        limit = 1
+    limit = int(args['--count'])
     osm = osm_fix.OsmFix(config)
-    osm.apply_kort_fix(limit, arguments['--dry'])
+    osm.apply_kort_fix(limit, args['--dry'])
