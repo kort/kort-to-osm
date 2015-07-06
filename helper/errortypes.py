@@ -69,6 +69,11 @@ class LanguageErrorType(ErrorType):
         return error == 'language_unknown'
 
     def apply_fix(self, kort_fix):
+        # ignore this fix if 'de' is the answer, appearently
+        # the German OSM community doesn't like name:de tags
+        if kort_fix['answer'] == 'de':
+            raise ErrorTypeError("Ignore fixes for name:de tag")
+
         try:
             orig_tag = kort_fix['osm_tag'].replace(':XX', '')
             new_tag = '%s:%s' % (orig_tag, kort_fix['answer'])
